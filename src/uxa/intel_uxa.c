@@ -84,11 +84,7 @@ static const int I830PatternROP[16] = {
 	ROP_1
 };
 
-#if HAS_DEVPRIVATEKEYREC
 DevPrivateKeyRec uxa_pixmap_index;
-#else
-int uxa_pixmap_index;
-#endif
 
 static void
 gen6_context_switch(intel_screen_private *intel,
@@ -1310,11 +1306,7 @@ Bool intel_uxa_init(ScreenPtr screen)
 	if (INTEL_INFO(intel)->gen >= 040 && INTEL_INFO(intel)->gen < 0100)
 		gen4_render_state_init(scrn);
 
-#if HAS_DIXREGISTERPRIVATEKEY
 	if (!dixRegisterPrivateKey(&uxa_pixmap_index, PRIVATE_PIXMAP, 0))
-#else
-	if (!dixRequestPrivate(&uxa_pixmap_index, 0))
-#endif
 		return FALSE;
 
 	intel_limits_init(intel);

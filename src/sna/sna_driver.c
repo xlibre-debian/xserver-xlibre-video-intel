@@ -713,11 +713,7 @@ static bool has_shadow(struct sna *sna)
 static void
 sna_block_handler(BLOCKHANDLER_ARGS_DECL)
 {
-#ifndef XF86_SCRN_INTERFACE
-	struct sna *sna = to_sna(xf86Screens[arg]);
-#else
 	struct sna *sna = to_sna_from_screen(arg);
-#endif
 	struct timeval **tv = timeout;
 
 	DBG(("%s (tv=%ld.%06ld), has_shadow?=%d\n", __FUNCTION__,
@@ -733,11 +729,7 @@ sna_block_handler(BLOCKHANDLER_ARGS_DECL)
 static void
 sna_wakeup_handler(WAKEUPHANDLER_ARGS_DECL)
 {
-#ifndef XF86_SCRN_INTERFACE
-	struct sna *sna = to_sna(xf86Screens[arg]);
-#else
 	struct sna *sna = to_sna_from_screen(arg);
-#endif
 
 	DBG(("%s\n", __FUNCTION__));
 
@@ -851,11 +843,7 @@ sna_handle_uevents(int fd, void *closure)
 
 static bool has_randr(void)
 {
-#if HAS_DIXREGISTERPRIVATEKEY
 	return dixPrivateKeyRegistered(rrPrivKey);
-#else
-	return *rrPrivKey;
-#endif
 }
 
 static void
@@ -1047,7 +1035,6 @@ static Bool sna_late_close_screen(CLOSE_SCREEN_ARGS_DECL)
 static Bool
 sna_register_all_privates(void)
 {
-#if HAS_DIXREGISTERPRIVATEKEY
 	if (!dixRegisterPrivateKey(&sna_pixmap_key, PRIVATE_PIXMAP,
 				   3*sizeof(void *)))
 		return FALSE;
@@ -1067,22 +1054,6 @@ sna_register_all_privates(void)
 	if (!dixRegisterPrivateKey(&sna_client_key, PRIVATE_CLIENT,
 				   sizeof(struct sna_client)))
 		return FALSE;
-#else
-	if (!dixRequestPrivate(&sna_pixmap_key, 3*sizeof(void *)))
-		return FALSE;
-
-	if (!dixRequestPrivate(&sna_gc_key, sizeof(FbGCPrivate)))
-		return FALSE;
-
-	if (!dixRequestPrivate(&sna_glyph_key, sizeof(struct sna_glyph)))
-		return FALSE;
-
-	if (!dixRequestPrivate(&sna_window_key, 3*sizeof(void *)))
-		return FALSE;
-
-	if (!dixRequestPrivate(&sna_client_key, sizeof(struct sna_client)))
-		return FALSE;
-#endif
 
 	return TRUE;
 }
@@ -1505,11 +1476,7 @@ _X_ATTRIBUTE_PRINTF(1, 0) void LogF(const char *f, ...)
 	 */
 
 	va_start(ap, f);
-#if XORG_VERSION_CURRENT >= XORG_VERSION_NUMERIC(1,12,99,901,0)
 	LogVMessageVerbSigSafe(X_NONE, 1, f, ap);
-#else
-	LogVMessageVerb(X_NONE, 1, f, ap);
-#endif
 	va_end(ap);
 }
 #endif

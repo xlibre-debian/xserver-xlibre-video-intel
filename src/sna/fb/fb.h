@@ -21,10 +21,13 @@
  * PERFORMANCE OF THIS SOFTWARE.
  */
 
-#ifndef FB_H
-#define FB_H
+#ifndef __XF86_VIDEO_INTEL_SNA_FB_H
+#define __XF86_VIDEO_INTEL_SNA_FB_H
 
 #include <xorg-server.h>
+
+#include <X11/Xarch.h>          /* for X_LITTLE_ENDIAN/X_BIG_ENDIAN */
+
 #include <servermd.h>
 #include <gcstruct.h>
 #include <colormap.h>
@@ -38,6 +41,26 @@
 
 #include "../../compat-api.h"
 #include "../debug.h"
+
+/* Macros which handle a coordinate in a single register */
+
+#ifndef GetHighWord
+
+#define GetHighWord(x) (((int) (x)) >> 16)
+
+#if X_BYTE_ORDER == X_LITTLE_ENDIAN
+# define coordToInt(x,y) (((y) << 16) | ((x) & 0xffff))
+# define intToX(i)       ((int) ((short) (i)))
+# define intToY(i)       (GetHighWord(i))
+#elif X_BYTE_ORDER == X_BIG_ENDIAN
+# define coordToInt(x,y) (((x) << 16) | ((y) & 0xffff))
+# define intToX(i)       (GetHighWord(i))
+# define intToY(i)       ((int) ((short) i))
+#else
+# error "Too weird to live."
+#endif
+
+#endif
 
 #define WRITE(ptr, val) (*(ptr) = (val))
 #define READ(ptr) (*(ptr))
@@ -55,10 +78,6 @@
 
 #if IMAGE_BYTE_ORDER != LSBFirst
 #error "IMAGE_BYTE_ORDER must be LSBFirst"
-#endif
-
-#if GLYPHPADBYTES != 4
-#error "GLYPHPADBYTES must be 4"
 #endif
 
 #if FB_SHIFT != 5
@@ -357,13 +376,8 @@ static inline PixmapPtr fbGetWindowPixmap(WindowPtr window)
  * here's a macro which uses that to disable GetImage and GetSpans
  */
 
-#if XORG_VERSION_CURRENT >= XORG_VERSION_NUMERIC(1,10,0,0,0)
 #define fbWindowEnabled(pWin) \
 	RegionNotEmpty(&(pWin)->drawable.pScreen->root->borderClip)
-#else
-#define fbWindowEnabled(pWin) \
-	RegionNotEmpty(&WindowTable[(pWin)->drawable.pScreen->myNum]->borderClip)
-#endif
 #define fbDrawableEnabled(drawable) \
     ((drawable)->type == DRAWABLE_PIXMAP ? \
      TRUE : fbWindowEnabled((WindowPtr) drawable))
@@ -565,4 +579,4 @@ fbTile(FbBits *dst, FbStride dstStride, int dstX, int width, int height,
 
 extern FbBits fbReplicatePixel(Pixel p, int bpp);
 
-#endif  /* FB_H */
+#endif  /* __XF86_VIDEO_INTEL_SNA_FB_H */
