@@ -47,9 +47,6 @@
 #define alloca __builtin_alloca
 #elif defined _AIX
 #define alloca __alloca
-#elif defined _MSC_VER
-#include <malloc.h>
-#define alloca _alloca
 #else
 void *alloca(size_t);
 #endif
@@ -300,9 +297,7 @@ struct sna_output {
 
 enum { /* XXX copied from hw/xfree86/modes/xf86Crtc.c */
 	OPTION_PREFERRED_MODE,
-#if XORG_VERSION_CURRENT >= XORG_VERSION_NUMERIC(1,14,99,1,0)
 	OPTION_ZOOM_MODES,
-#endif
 	OPTION_POSITION,
 	OPTION_BELOW,
 	OPTION_RIGHT_OF,
@@ -1146,7 +1141,7 @@ static inline void sigio_unblock(int was_blocked)
 {
 	(void)was_blocked;
 }
-#elif XORG_VERSION_CURRENT >= XORG_VERSION_NUMERIC(1,12,99,901,0)
+#else
 static inline int sigio_block(void)
 {
 	OsBlockSIGIO();
@@ -1156,17 +1151,6 @@ static inline void sigio_unblock(int was_blocked)
 {
 	OsReleaseSIGIO();
 	(void)was_blocked;
-}
-#else
-#include <xf86_OSproc.h>
-static inline int sigio_block(void)
-{
-	input_lock();
-	return 0;
-}
-static inline void sigio_unblock(int was_blocked)
-{
-	input_unlock();
 }
 #endif
 
@@ -2375,9 +2359,7 @@ void sna_copy_fbcon(struct sna *sna)
 
 	kgem_bo_destroy(&sna->kgem, bo);
 
-#if ABI_VIDEODRV_VERSION >= SET_ABI_VERSION(10, 0)
 	to_screen_from_sna(sna)->canDoBGNoneRoot = ok;
-#endif
 }
 
 static bool use_shadow(struct sna *sna, xf86CrtcPtr crtc)
@@ -4255,15 +4237,10 @@ default_modes(DisplayModePtr preferred)
 	DisplayModePtr modes;
 	int n;
 
-#if XORG_VERSION_CURRENT >= XORG_VERSION_NUMERIC(1,6,99,900,0)
 	modes = xf86GetDefaultModes();
-#else
-	modes = xf86GetDefaultModes(0, 0);
-#endif
 
 	/* XXX O(n^2) mode list generation :( */
 
-#if XORG_VERSION_CURRENT >= XORG_VERSION_NUMERIC(1,4,99,901,0)
 	if (preferred) {
 		DisplayModePtr m;
 
@@ -4321,7 +4298,6 @@ default_modes(DisplayModePtr preferred)
 			}
 		}
 	}
-#endif
 
 	return modes;
 }
@@ -5123,11 +5099,7 @@ static char *fake_edid_name(xf86OutputPtr output)
 	struct sna *sna = to_sna(output->scrn);
 	const char *str, *colon;
 
-#if XORG_VERSION_CURRENT >= XORG_VERSION_NUMERIC(1,7,99,901,0)
 	str = xf86GetOptValString(sna->Options, OPTION_EDID);
-#else
-	str = NULL;
-#endif
 	if (str == NULL)
 		return NULL;
 
@@ -6752,7 +6724,6 @@ disable:
 		restore_swcursor(sna);
 }
 
-#if XORG_VERSION_CURRENT >= XORG_VERSION_NUMERIC(1,15,99,902,2)
 static Bool
 sna_load_cursor_argb2(ScrnInfoPtr scrn, CursorPtr cursor)
 {
@@ -6764,7 +6735,6 @@ sna_load_cursor_image2(ScrnInfoPtr scrn, unsigned char *src)
 {
 	return TRUE;
 }
-#endif
 
 static void
 sna_load_cursor_argb(ScrnInfoPtr scrn, CursorPtr cursor)
@@ -6992,11 +6962,9 @@ sna_cursors_init(ScreenPtr screen, struct sna *sna)
 	cursor_info->UseHWCursorARGB = sna_use_hw_cursor;
 	cursor_info->LoadCursorARGB = sna_load_cursor_argb;
 #endif
-#if XORG_VERSION_CURRENT >= XORG_VERSION_NUMERIC(1,15,99,902,3)
 	cursor_info->LoadCursorImageCheck = sna_load_cursor_image2;
 #ifdef ARGB_CURSOR
 	cursor_info->LoadCursorARGBCheck = sna_load_cursor_argb2;
-#endif
 #endif
 
 	if (!xf86InitCursor(screen, cursor_info)) {

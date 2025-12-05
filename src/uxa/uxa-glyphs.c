@@ -82,19 +82,11 @@ struct uxa_glyph {
 	uint16_t size, pos;
 };
 
-#if HAS_DEVPRIVATEKEYREC
 static DevPrivateKeyRec uxa_glyph_key;
-#else
-static int uxa_glyph_key;
-#endif
 
 static inline struct uxa_glyph *uxa_glyph_get_private(GlyphPtr glyph)
 {
-#if HAS_DEVPRIVATEKEYREC
 	return dixGetPrivate(&glyph->devPrivates, &uxa_glyph_key);
-#else
-	return dixLookupPrivate(&glyph->devPrivates, &uxa_glyph_key);
-#endif
 }
 
 static inline void uxa_glyph_set_private(GlyphPtr glyph, struct uxa_glyph *priv)
@@ -209,13 +201,8 @@ bail:
 Bool uxa_glyphs_init(ScreenPtr pScreen)
 {
 
-#if HAS_DIXREGISTERPRIVATEKEY
 	if (!dixRegisterPrivateKey(&uxa_glyph_key, PRIVATE_GLYPH, 0))
 		return FALSE;
-#else
-	if (!dixRequestPrivate(&uxa_glyph_key, 0))
-		return FALSE;
-#endif
 
 	/* Skip pixmap creation if we don't intend to use it. */
 	if (uxa_get_screen(pScreen)->force_fallback)
