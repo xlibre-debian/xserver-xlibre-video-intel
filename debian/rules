@@ -31,12 +31,17 @@ override_dh_auto_configure:
 override_dh_auto_install:
 	dh_auto_install --destdir debian/tmp
 
+# no idea why libI810XvMC is there, but adding.
 # Kill *.la files, libxvmc symlinks, and forget no-one:
 override_dh_install:
 	find debian/tmp -name '*.la' -delete
 	rm -f debian/tmp/usr/lib/libIntelXvMC.so
 	mkdir -p debian/tmp/usr/lib/$(DEB_HOST_MULTIARCH)
 	mv debian/tmp/usr/lib/libIntelXvMC.so.* \
+		debian/tmp/usr/lib/$(DEB_HOST_MULTIARCH)/.
+	rm -f debian/tmp/usr/lib/libI810XvMC.so
+	mkdir -p debian/tmp/usr/lib/$(DEB_HOST_MULTIARCH)
+	mv debian/tmp/usr/lib/libI810XvMC.so.* \
 		debian/tmp/usr/lib/$(DEB_HOST_MULTIARCH)/.
 	dh_install
 
