@@ -1,5 +1,0 @@
-variables:
-    FDO_UPSTREAM_REPO:  'xorg/driver/xf86-video-intel'
-
-include:
-    - local:    '.gitlab-ci/common/xorg-driver.yml'

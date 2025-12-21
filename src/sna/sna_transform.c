@@ -26,10 +26,7 @@
  *    Jesse Barns <jbarnes@virtuousgeek.org>
  *    Chris Wilson <chris@chris-wilson.co.uk>
  */
-
-#ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
 
 #include "sna.h"
 

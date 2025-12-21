@@ -32,10 +32,7 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
  *          David Dawes <dawes@xfree86.org>
  *          Alan Hourihane <alanh@tungstengraphics.com>
  */
-
-#ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
 
 #include <assert.h>
 #include <string.h>

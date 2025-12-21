@@ -40,10 +40,7 @@
  *      Offscreen Images:
  *        Matt Sottek <matthew.j.sottek@intel.com>
  */
-
-#ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
 
 #include <inttypes.h>
 #include <math.h>

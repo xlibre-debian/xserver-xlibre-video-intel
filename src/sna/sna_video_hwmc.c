@@ -24,9 +24,7 @@
  *    Zhenyu Wang <zhenyu.z.wang@sna.com>
  *
  */
-#ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
 
 #define _SNA_XVMC_SERVER_
 #include "sna.h"

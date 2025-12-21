@@ -32,10 +32,7 @@ THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *      Offscreen Images:
  *        Matt Sottek <matthew.j.sottek@intel.com>
  */
-
-#ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
 
 #include <string.h>
 

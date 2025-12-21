@@ -25,10 +25,7 @@
  *    Dave Airlie <airlied@redhat.com>
  *
  */
-
-#ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
 
 #include <stdint.h>
 #include <sys/types.h>
@@ -7624,11 +7621,6 @@ static bool sna_probe_initial_configuration(struct sna *sna)
 					output->mm_width = output->conf_monitor->mon_width;
 					output->mm_height = output->conf_monitor->mon_height;
 				}
-
-#if 0
-				sna_output_attach_edid(output);
-				sna_output_attach_tile(output);
-#endif
 
 				if (output->mm_width == 0 || output->mm_height == 0) {
 					output->mm_height = (crtc->desiredMode.VDisplay * 254) / (10*DEFAULT_DPI);

@@ -24,10 +24,7 @@
  *    Dave Airlie <airlied@redhat.com>
  *
  */
-
-#ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -1349,15 +1346,6 @@ static const xf86OutputFuncsRec intel_output_funcs = {
 	.get_property = intel_output_get_property,
 #endif
 	.dpms = intel_output_dpms,
-#if 0
-
-	.save = drmmode_crt_save,
-	.restore = drmmode_crt_restore,
-	.mode_fixup = drmmode_crt_mode_fixup,
-	.prepare = intel_output_prepare,
-	.mode_set = drmmode_crt_mode_set,
-	.commit = intel_output_commit,
-#endif
 	.detect = intel_output_detect,
 	.mode_valid = intel_output_mode_valid,
 

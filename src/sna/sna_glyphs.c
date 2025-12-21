@@ -57,10 +57,7 @@
  * Author: Chris Wilson <chris@chris-wilson.co.uk>
  * Based on code by: Keith Packard <keithp@keithp.com> and Owen Taylor <otaylor@fishsoup.net>
  */
-
-#ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
 
 #include "sna.h"
 #include "sna_render.h"
