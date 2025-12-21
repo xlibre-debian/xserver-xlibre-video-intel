@@ -1,3 +1,9 @@
+xserver-xlibre-video-intel (3:25.0.0-1) unstable; urgency=medium
+
+  * New upstream version 25.0.0
+
+ -- NexusSfan <nexussfan@duck.com>  Sat, 20 Dec 2025 16:46:25 -0800
+
 xserver-xlibre-video-intel (2:3.0.0.5-1) unstable; urgency=medium
 
   * New upstream version 3.0.0.5
