@@ -22,10 +22,10 @@
 
 # Initialize Autoconf
 AC_PREREQ([2.60])
-AC_INIT([xf86-video-intel],
-        [2.99.917],
-        [https://gitlab.freedesktop.org/xorg/driver/xf86-video-intel/issues/new],
-        [xf86-video-intel])
+AC_INIT([xlibre-xf86-video-intel],
+        [25.0.0],
+        [https://github.com/X11Libre/xf86-video-sis/issues],
+        [xlibre-xf86-video-intel])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_MACRO_DIR([m4])
@@ -89,33 +89,6 @@ AM_CONDITIONAL(BUILD_BACKLIGHT_HELPER, [test "x$backlight" = "xyes" -a "x$backli
 if test "x$backlight_helper" = "xyes"; then
 	tools_msg="$tools_msg xf86-video-intel-backlight-helper"
 	AC_DEFINE(USE_BACKLIGHT_HELPER, 1, [Enable use of the backlight helper interfaces])
-fi
-
-# Are we in a git checkout?
-dot_git=no
-if test -e .git; then
-	AC_DEFINE(HAVE_DOT_GIT, 1, [Are we in a git checkout?])
-	dot_git=yes
-fi
-AM_CONDITIONAL(HAVE_DOT_GIT, test "x$dot_git" = "xyes")
-
-# If so, we include the git description in our logs for sanity checking.
-#
-# However, for people not running their own drivers this is just noise.
-# So we copy the xserver's builderstring idiom to allow for this to be
-# overridden and perhaps replaced with something more useful.
-AC_ARG_WITH(builderstring,
-	    AS_HELP_STRING([--with-builderstring=BUILDERSTRING],
-			   [Additional builder string (default: use git describe)]),
-	    [BUILDERSTRING="$withval"],
-	    [BUILDERSTRING="x-magic-git-describe"])
-
-if test "x$BUILDERSTRING" = "xx-magic-git-describe" -a "x$dot_git" = "xyes"; then
-	AC_DEFINE(USE_GIT_DESCRIBE, 1, [Use automagic builder description])
-else
-  if test "x$BUILDERSTRING" != x -a "x$BUILDERSTRING" != "xno" -a "x$BUILDERSTRING" != xx-magic-git-describe; then
-	  AC_DEFINE_UNQUOTED(BUILDER_DESCRIPTION, ["$BUILDERSTRING"], [Builder description])
-  fi
 fi
 
 AC_ARG_ENABLE(gen4asm,
@@ -750,8 +723,6 @@ LIBS=""
 AC_SEARCH_LIBS(clock_gettime, rt, [CLOCK_GETTIME_LIBS=$LIBS])
 AC_SUBST(CLOCK_GETTIME_LIBS)
 
-sdkdir=`$PKG_CONFIG --variable=sdkdir xorg-server`
-
 AM_CONDITIONAL(DEBUG, test "x$DEBUG" != "xno")
 AM_CONDITIONAL(FULL_DEBUG, test "x$DEBUG" = "xfull")
 if test "x$DEBUG" = "xno"; then
@@ -805,8 +776,6 @@ fi
 AC_CONFIG_LIBOBJ_DIR(libobj)
 AC_REPLACE_FUNCS(getline)
 
-DRIVER_NAME="intel"
-AC_SUBST([DRIVER_NAME])
 AC_SUBST([moduledir])
 AC_DEFINE_DIR([PREFIX_PATH], prefix, [installation prefix])
 AC_DEFINE_DIR([LIBEXEC_PATH], libexecdir, [libexec directory])

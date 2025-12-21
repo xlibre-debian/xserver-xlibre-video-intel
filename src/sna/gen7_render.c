@@ -29,10 +29,7 @@
  *    Chris Wilson <chris@chris-wilson.co.uk>
  *
  */
-
-#ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
 
 #include "sna.h"
 #include "sna_reg.h"
@@ -603,22 +600,6 @@ gen7_disable_vs(struct sna *sna)
 	OUT_BATCH(0);
 	OUT_BATCH(0);
 	OUT_BATCH(0); /* pass-through */
-
-#if 0
-	OUT_BATCH(GEN7_3DSTATE_CONSTANT_VS | (7 - 2));
-	OUT_BATCH(0);
-	OUT_BATCH(0);
-	OUT_BATCH(0);
-	OUT_BATCH(0);
-	OUT_BATCH(0);
-	OUT_BATCH(0);
-
-	OUT_BATCH(GEN7_3DSTATE_BINDING_TABLE_POINTERS_VS | (2 - 2));
-	OUT_BATCH(0);
-
-	OUT_BATCH(GEN7_3DSTATE_SAMPLER_STATE_POINTERS_VS | (2 - 2));
-	OUT_BATCH(0);
-#endif
 }
 
 static void
@@ -631,22 +612,6 @@ gen7_disable_hs(struct sna *sna)
 	OUT_BATCH(0);
 	OUT_BATCH(0);
 	OUT_BATCH(0); /* pass-through */
-
-#if 0
-	OUT_BATCH(GEN7_3DSTATE_CONSTANT_HS | (7 - 2));
-	OUT_BATCH(0);
-	OUT_BATCH(0);
-	OUT_BATCH(0);
-	OUT_BATCH(0);
-	OUT_BATCH(0);
-	OUT_BATCH(0);
-
-	OUT_BATCH(GEN7_3DSTATE_BINDING_TABLE_POINTERS_HS | (2 - 2));
-	OUT_BATCH(0);
-
-	OUT_BATCH(GEN7_3DSTATE_SAMPLER_STATE_POINTERS_HS | (2 - 2));
-	OUT_BATCH(0);
-#endif
 }
 
 static void
@@ -667,22 +632,6 @@ gen7_disable_ds(struct sna *sna)
 	OUT_BATCH(0);
 	OUT_BATCH(0);
 	OUT_BATCH(0);
-
-#if 0
-	OUT_BATCH(GEN7_3DSTATE_CONSTANT_DS | (7 - 2));
-	OUT_BATCH(0);
-	OUT_BATCH(0);
-	OUT_BATCH(0);
-	OUT_BATCH(0);
-	OUT_BATCH(0);
-	OUT_BATCH(0);
-
-	OUT_BATCH(GEN7_3DSTATE_BINDING_TABLE_POINTERS_DS | (2 - 2));
-	OUT_BATCH(0);
-
-	OUT_BATCH(GEN7_3DSTATE_SAMPLER_STATE_POINTERS_DS | (2 - 2));
-	OUT_BATCH(0);
-#endif
 }
 
 static void
@@ -695,22 +644,6 @@ gen7_disable_gs(struct sna *sna)
 	OUT_BATCH(0);
 	OUT_BATCH(0);
 	OUT_BATCH(0); /* pass-through */
-
-#if 0
-	OUT_BATCH(GEN7_3DSTATE_CONSTANT_GS | (7 - 2));
-	OUT_BATCH(0);
-	OUT_BATCH(0);
-	OUT_BATCH(0);
-	OUT_BATCH(0);
-	OUT_BATCH(0);
-	OUT_BATCH(0);
-
-	OUT_BATCH(GEN7_3DSTATE_BINDING_TABLE_POINTERS_GS | (2 - 2));
-	OUT_BATCH(0);
-
-	OUT_BATCH(GEN7_3DSTATE_SAMPLER_STATE_POINTERS_GS | (2 - 2));
-	OUT_BATCH(0);
-#endif
 }
 
 static void
@@ -736,14 +669,6 @@ gen7_emit_sf_invariant(struct sna *sna)
 static void
 gen7_emit_cc_invariant(struct sna *sna)
 {
-#if 0 /* unused, no change */
-	OUT_BATCH(GEN7_3DSTATE_CC_STATE_POINTERS | (2 - 2));
-	OUT_BATCH(0);
-
-	OUT_BATCH(GEN7_3DSTATE_DEPTH_STENCIL_STATE_POINTERS | (2 - 2));
-	OUT_BATCH(0);
-#endif
-
 	/* XXX clear to be safe */
 	OUT_BATCH(GEN7_3DSTATE_VIEWPORT_STATE_POINTERS_CC | (2 - 2));
 	OUT_BATCH(0);
@@ -768,17 +693,6 @@ gen7_emit_wm_invariant(struct sna *sna)
 	OUT_BATCH(GEN7_WM_DISPATCH_ENABLE |
 		  GEN7_WM_PERSPECTIVE_PIXEL_BARYCENTRIC);
 	OUT_BATCH(0);
-
-#if 0
-	/* XXX length bias of 7 in old spec? */
-	OUT_BATCH(GEN7_3DSTATE_CONSTANT_PS | (7 - 2));
-	OUT_BATCH(0);
-	OUT_BATCH(0);
-	OUT_BATCH(0);
-	OUT_BATCH(0);
-	OUT_BATCH(0);
-	OUT_BATCH(0);
-#endif
 }
 
 static void
@@ -792,12 +706,6 @@ gen7_emit_null_depth_buffer(struct sna *sna)
 	OUT_BATCH(0);
 	OUT_BATCH(0);
 	OUT_BATCH(0);
-
-#if 0
-	OUT_BATCH(GEN7_3DSTATE_CLEAR_PARAMS | (3 - 2));
-	OUT_BATCH(0);
-	OUT_BATCH(0);
-#endif
 }
 
 static void

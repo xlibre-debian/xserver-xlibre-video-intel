@@ -21,11 +21,6 @@
  * TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
  * PERFORMANCE OF THIS SOFTWARE.
  */
-
-#ifdef HAVE_DIX_CONFIG_H
-#include <dix-config.h>
-#endif
-
 #include <stdlib.h>
 
 #include "uxa-priv.h"
@@ -1309,10 +1304,6 @@ compatible_formats (CARD8 op, PicturePtr dst, PicturePtr src)
 			return 1;
 
 		/* XXX xrgb is promoted to argb during image upload... */
-#if 0
-		if (dst->format == PICT_a8r8g8b8 && src->format == PICT_x8r8g8b8)
-			return 1;
-#endif
 	} else if (op == PictOpOver) {
 		if (PICT_FORMAT_A(src->format))
 			return 0;

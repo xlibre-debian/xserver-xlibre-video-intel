@@ -29,10 +29,7 @@
  *    Chris Wilson <chris@chris-wilson.co.uk>
  *
  */
-
-#ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
 
 #include "sna.h"
 #include "sna_reg.h"
@@ -635,17 +632,7 @@ gen4_emit_pipe_break(struct sna *sna)
 inline static void
 gen4_emit_pipe_invalidate(struct sna *sna)
 {
-#if 0
-	OUT_BATCH(GEN4_PIPE_CONTROL |
-		  GEN4_PIPE_CONTROL_WC_FLUSH |
-		  (sna->kgem.gen >= 045 ? GEN4_PIPE_CONTROL_TC_FLUSH : 0) |
-		  (4 - 2));
-	OUT_BATCH(0);
-	OUT_BATCH(0);
-	OUT_BATCH(0);
-#else
 	OUT_BATCH(MI_FLUSH);
-#endif
 }
 
 static void gen4_emit_primitive(struct sna *sna)

@@ -24,10 +24,7 @@
  *    Chris Wilson <chris@chris-wilson.co.uk>
  *
  */
-
-#ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
 
 #include <sys/types.h>
 #include <sys/socket.h>

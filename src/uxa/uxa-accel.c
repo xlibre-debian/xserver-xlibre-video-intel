@@ -28,9 +28,6 @@
  *
  */
 
-#ifdef HAVE_DIX_CONFIG_H
-#include <dix-config.h>
-#endif
 #include "uxa-priv.h"
 #include <X11/fonts/fontstruct.h>
 #include "dixfontstr.h"

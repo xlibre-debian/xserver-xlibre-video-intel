@@ -26,10 +26,7 @@ TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 **************************************************************************/
-
-#ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
 
 #include "xorg-server.h"
 #include <xf86.h>

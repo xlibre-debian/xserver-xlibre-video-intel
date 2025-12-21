@@ -40,10 +40,7 @@
  *      Offscreen Images:
  *        Matt Sottek <matthew.j.sottek@intel.com>
  */
-
-#ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
 
 #include <inttypes.h>
 #include <math.h>
@@ -233,12 +230,6 @@ intel_uxa_video_put_image_textured(ScrnInfoPtr scrn,
 
 	if (!intel_uxa_pixmap_is_offscreen(pixmap))
 		return BadAlloc;
-
-#if 0
-	ErrorF("I830PutImage: src: (%d,%d)(%d,%d), dst: (%d,%d)(%d,%d)\n"
-	       "width %d, height %d\n", src_x, src_y, src_w, src_h, drw_x,
-	       drw_y, drw_w, drw_h, width, height);
-#endif
 
 	if (!intel_clip_video_helper(scrn,
 				    adaptor_priv,

@@ -31,10 +31,7 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
  *          David Dawes <dawes@xfree86.org>
  *          Keith Whitwell <keith@tungstengraphics.com>
  */
-
-#ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
 
 #include <errno.h>
 #include <time.h>

@@ -24,9 +24,7 @@
  *    Zhenyu Wang <zhenyu.z.wang@intel.com>
  *
  */
-#ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
 
 #define _INTEL_XVMC_SERVER_
 #include "intel.h"

@@ -1,5 +1,5 @@
 project('xf86-video-intel', 'c',
-	version : '2.99.917',
+	version : '25.0.0',
 	default_options: [
 	  'warning_level=2',
 	  'c_std=gnu99',
@@ -61,9 +61,6 @@ if cc.has_header_symbol('xorg-server.h', 'DPMSExtension',
 endif
 
 with_tools = get_option('tools')
-
-config.set('USE_GIT_DESCRIBE', 1)
-config.set('BUILDER_DESCRIPTION', 1)
 
 atomic_primitives = 'none'
 

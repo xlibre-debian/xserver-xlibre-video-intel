@@ -24,10 +24,7 @@
  *    Eric Anholt <eric@anholt.net>
  *
  */
-
-#ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
 
 #include "xorg-server.h"
 #include "xf86.h"
@@ -57,11 +54,6 @@ I915DisplayVideoTextured(ScrnInfoPtr scrn,
 	int nbox_this_time;
 	int dxo, dyo, pix_xoff, pix_yoff;
 	PixmapPtr target;
-
-#if 0
-	ErrorF("I915DisplayVideo: %dx%d (pitch %d)\n", width, height,
-	       video_pitch);
-#endif
 
 	dxo = dstRegion->extents.x1;
 	dyo = dstRegion->extents.y1;

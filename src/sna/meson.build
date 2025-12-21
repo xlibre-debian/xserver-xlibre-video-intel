@@ -5,12 +5,6 @@ if cc.has_member('struct sysinfo', 'totalram',
   config.set('HAVE_STRUCT_SYSINFO_TOTALRAM', 1)
 endif
 
-git_version_h = vcs_tag(input : 'git_version.h.in', output : 'git_version.h',
-			fallback : 'not compiled from git',
-			command : [ 'git', 'describe' ] )
-
-config.set('HAVE_DOT_GIT', 1)
-
 if cc.has_header('alloca.h')
   config.set('HAVE_ALLOCA_H', 1)
 endif
@@ -124,7 +118,7 @@ subdir('brw')
 subdir('fb')
 
 sna = static_library('sna',
-		     [ git_version_h, sna_sources ],
+		     [ sna_sources ],
 		     dependencies : sna_deps,
 		     link_with : [ brw, fb, ],
 		     include_directories : inc,
