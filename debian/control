@@ -30,8 +30,8 @@ Build-Depends:
  libpixman-1-dev,
  libxss-dev,
 Standards-Version: 4.6.0
-Vcs-Git: https://github.com/xlibre-deb/xserver-xlibre-video-intel.git
-Vcs-Browser: https://github.com/xlibre-deb/xserver-xlibre-video-intel
+Vcs-Git: https://github.com/xlibre-debian/xserver-xlibre-video-intel.git
+Vcs-Browser: https://github.com/xlibre-debian/xserver-xlibre-video-intel
 Homepage: https://github.com/X11Libre
 
 Package: xserver-xlibre-video-intel
