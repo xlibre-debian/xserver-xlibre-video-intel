@@ -301,7 +301,6 @@ intel_mode_disable_unused_functions(ScrnInfoPtr scrn)
 static Bool
 intel_crtc_apply(xf86CrtcPtr crtc)
 {
-	ScrnInfoPtr scrn = crtc->scrn;
 	struct intel_crtc *intel_crtc = crtc->driver_private;
 	struct intel_mode *mode = intel_crtc->mode;
 	xf86CrtcConfigPtr   xf86_config = XF86_CRTC_CONFIG_PTR(crtc->scrn);
@@ -1341,10 +1340,8 @@ intel_output_get_property(xf86OutputPtr output, Atom property)
 
 static const xf86OutputFuncsRec intel_output_funcs = {
 	.create_resources = intel_output_create_resources,
-#ifdef RANDR_12_INTERFACE
 	.set_property = intel_output_set_property,
 	.get_property = intel_output_get_property,
-#endif
 	.dpms = intel_output_dpms,
 	.detect = intel_output_detect,
 	.mode_valid = intel_output_mode_valid,
@@ -1549,7 +1546,7 @@ intel_output_init(ScrnInfoPtr scrn, struct intel_mode *mode, drmModeResPtr mode_
 	intel_output->output = output;
 
 	if (dynamic) {
-		output->randr_output = RROutputCreate(xf86ScrnToScreen(scrn), output->name, strlen(output->name), output);
+		output->randr_output = RROutputCreate(scrn->pScreen, output->name, strlen(output->name), output);
 		intel_output_create_resources(output);
 	}
 
@@ -2053,29 +2050,12 @@ intel_pageflip_abort(ScrnInfoPtr scrn, xf86CrtcPtr crtc, void *data)
 /*
  * Check for pending DRM events and process them.
  */
-#if !HAVE_NOTIFY_FD
-static void
-drm_wakeup_handler(pointer data, int err, pointer p)
-{
-	struct intel_mode *mode;
-	fd_set *read_mask;
-
-	if (data == NULL || err < 0)
-		return;
-
-	mode = data;
-	read_mask = p;
-	if (FD_ISSET(mode->fd, read_mask))
-		drmHandleEvent(mode->fd, &mode->event_context);
-}
-#else
 static void
 drm_notify_fd(int fd, int ready, void *data)
 {
 	struct intel_mode *mode = data;
 	drmHandleEvent(mode->fd, &mode->event_context);
 }
-#endif
 
 /*
  * If there are any available, read drm_events
@@ -2237,10 +2217,6 @@ intel_mode_init(struct intel_screen_private *intel)
 	 */
 	mode->flip_count = 0;
 	SetNotifyFd(mode->fd, drm_notify_fd, X_NOTIFY_READ, mode);
-#if !HAVE_NOTIFY_FD
-	RegisterBlockAndWakeupHandlers((BlockHandlerProcPtr)NoopDDA,
-				       drm_wakeup_handler, mode);
-#endif
 }
 
 void
@@ -2264,10 +2240,6 @@ intel_mode_close(intel_screen_private *intel)
 
         intel_drm_abort_scrn(intel->scrn);
 
-#if !HAVE_NOTIFY_FD
-	RemoveBlockAndWakeupHandlers((BlockHandlerProcPtr)NoopDDA,
-				     drm_wakeup_handler, mode);
-#endif
 	RemoveNotifyFd(mode->fd);
 }
 
@@ -2384,7 +2356,7 @@ intel_create_pixmap_for_bo(ScreenPtr pScreen, dri_bo *bo,
 static PixmapPtr
 intel_create_pixmap_for_fbcon(ScrnInfoPtr scrn, int fbcon_id)
 {
-	ScreenPtr pScreen = xf86ScrnToScreen(scrn);
+	ScreenPtr pScreen = scrn->pScreen;
 	intel_screen_private *intel = intel_get_screen_private(scrn);
 	struct intel_mode *mode = intel->modes;
 	int fd = mode->fd;
@@ -2434,7 +2406,7 @@ out_free_fb:
 void intel_copy_fb(ScrnInfoPtr scrn)
 {
 	xf86CrtcConfigPtr xf86_config = XF86_CRTC_CONFIG_PTR(scrn);
-	ScreenPtr pScreen = xf86ScrnToScreen(scrn);
+	ScreenPtr pScreen = scrn->pScreen;
 	intel_screen_private *intel = intel_get_screen_private(scrn);
 	PixmapPtr src, dst;
 	unsigned int pitch = scrn->displayWidth * intel->cpp;
@@ -2542,11 +2514,11 @@ intel_mode_hotplug(struct intel_screen_private *intel)
 	}
 
 	if (changed)
-		RRTellChanged(xf86ScrnToScreen(scrn));
+		RRTellChanged(scrn->pScreen);
 
 	drmModeFreeResources(mode_res);
 out:
-	RRGetInfo(xf86ScrnToScreen(scrn), TRUE);
+	RRGetInfo(scrn->pScreen, TRUE);
 }
 
 void intel_box_intersect(BoxPtr dest, BoxPtr a, BoxPtr b)

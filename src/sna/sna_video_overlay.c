@@ -125,7 +125,7 @@ static bool sna_video_overlay_update_attrs(struct sna_video *video)
 	return drmIoctl(video->sna->kgem.fd, DRM_IOCTL_I915_OVERLAY_ATTRS, &attrs) == 0;
 }
 
-static int sna_video_overlay_stop(ddStopVideo_ARGS)
+static int sna_video_overlay_stop(XvPortPtr port, DrawablePtr draw)
 {
 	struct sna_video *video = port->devPriv.ptr;
 	struct sna *sna = video->sna;
@@ -150,7 +150,7 @@ static int sna_video_overlay_stop(ddStopVideo_ARGS)
 }
 
 static int
-sna_video_overlay_set_attribute(ddSetPortAttribute_ARGS)
+sna_video_overlay_set_attribute(XvPortPtr port, Atom attribute, INT32 value)
 {
 	struct sna_video *video = port->devPriv.ptr;
 	struct sna *sna = video->sna;
@@ -221,7 +221,7 @@ sna_video_overlay_set_attribute(ddSetPortAttribute_ARGS)
 }
 
 static int
-sna_video_overlay_get_attribute(ddGetPortAttribute_ARGS)
+sna_video_overlay_get_attribute(XvPortPtr port, Atom attribute, INT32 *value)
 {
 	struct sna_video *video = port->devPriv.ptr;
 	struct sna *sna = video->sna;
@@ -571,11 +571,7 @@ invisible:
 	/*
 	 * If the video isn't visible on any CRTC, turn it off
 	 */
-#if XORG_XV_VERSION < 2
-	sna_video_overlay_stop(client, port, draw);
-#else
 	sna_video_overlay_stop(port, draw);
-#endif
 	return Success;
 }
 
@@ -727,10 +723,6 @@ void sna_video_overlay_setup(struct sna *sna, ScreenPtr screen)
 	adaptor->pAttributes = (XvAttributeRec *)Attributes;
 	adaptor->nImages = ARRAY_SIZE(Images);
 	adaptor->pImages = (XvImageRec *)Images;
-#if XORG_XV_VERSION < 2
-	adaptor->ddAllocatePort = sna_xv_alloc_port;
-	adaptor->ddFreePort = sna_xv_free_port;
-#endif
 	adaptor->ddPutVideo = NULL;
 	adaptor->ddPutStill = NULL;
 	adaptor->ddGetVideo = NULL;

@@ -220,6 +220,5 @@ fbCopyPlane(DrawablePtr src, DrawablePtr dst, GCPtr gc,
 				fbCopy1toN, (Pixel) bitplane, 0);
 	else
 		return miHandleExposures(src, dst, gc,
-					 sx, sy, width, height, dx, dy,
-					 bitplane);
+					 sx, sy, width, height, dx, dy);
 }

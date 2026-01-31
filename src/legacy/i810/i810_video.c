@@ -62,23 +62,19 @@ THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 static void I810InitOffscreenImages(ScreenPtr);
 
 static XF86VideoAdaptorPtr I810SetupImageVideo(ScreenPtr);
-static void I810StopVideo(ScrnInfoPtr, pointer, Bool);
-static int I810SetPortAttribute(ScrnInfoPtr, Atom, INT32, pointer);
-static int I810GetPortAttribute(ScrnInfoPtr, Atom ,INT32 *, pointer);
+static void I810StopVideo(ScrnInfoPtr, void*, Bool);
+static int I810SetPortAttribute(ScrnInfoPtr, Atom, INT32, void*);
+static int I810GetPortAttribute(ScrnInfoPtr, Atom ,INT32 *, void*);
 static void I810QueryBestSize(ScrnInfoPtr, Bool,
-	short, short, short, short, unsigned int *, unsigned int *, pointer);
+	short, short, short, short, unsigned int *, unsigned int *, void*);
 static int I810PutImage( ScrnInfoPtr, 
 	short, short, short, short, short, short, short, short,
-	int, unsigned char*, short, short, Bool, RegionPtr, pointer,
+	int, unsigned char*, short, short, Bool, RegionPtr, void*,
 	DrawablePtr);
 static int I810QueryImageAttributes(ScrnInfoPtr, 
 	int, unsigned short *, unsigned short *,  int *, int *);
 
-#if !HAVE_NOTIFY_FD
-static void I810BlockHandler(BLOCKHANDLER_ARGS_DECL);
-#else
 static void I810BlockHandler(void *data, void *_timeout);
-#endif
 
 #define MAKE_ATOM(a) MakeAtom(a, sizeof(a) - 1, TRUE)
 
@@ -204,7 +200,7 @@ static XF86VideoFormatRec Formats[NUM_FORMATS] =
 
 #define NUM_ATTRIBUTES 3
 
-static XF86AttributeRec Attributes[NUM_ATTRIBUTES] =
+static XvAttributeRec Attributes[NUM_ATTRIBUTES] =
 {
    {XvSettable | XvGettable, 0, (1 << 24) - 1, "XV_COLORKEY"},
    {XvSettable | XvGettable, -128, 127, "XV_BRIGHTNESS"},
@@ -391,7 +387,7 @@ I810SetupImageVideo(ScreenPtr screen)
 
     pPriv = (I810PortPrivPtr)(&adapt->pPortPrivates[1]);
 
-    adapt->pPortPrivates[0].ptr = (pointer)(pPriv);
+    adapt->pPortPrivates[0].ptr = (void*)(pPriv);
     adapt->pAttributes = Attributes;
     adapt->nImages = NUM_IMAGES;
     adapt->nAttributes = NUM_ATTRIBUTES;
@@ -419,14 +415,9 @@ I810SetupImageVideo(ScreenPtr screen)
 
     pI810->adaptor = adapt;
 
-#if !HAVE_NOTIFY_FD
-    pI810->BlockHandler = screen->BlockHandler;
-    screen->BlockHandler = I810BlockHandler;
-#else
     RegisterBlockAndWakeupHandlers(I810BlockHandler,
 				   (ServerWakeupHandlerProcPtr)NoopDDA,
 				   pScrn);
-#endif
 
     xvBrightness = MAKE_ATOM("XV_BRIGHTNESS");
     xvContrast   = MAKE_ATOM("XV_CONTRAST");
@@ -513,7 +504,7 @@ I810ClipVideo(
 } 
 
 static void 
-I810StopVideo(ScrnInfoPtr pScrn, pointer data, Bool shutdown)
+I810StopVideo(ScrnInfoPtr pScrn, void *data, Bool shutdown)
 {
   I810PortPrivPtr pPriv = (I810PortPrivPtr)data;
   I810Ptr pI810 = I810PTR(pScrn);
@@ -546,7 +537,7 @@ I810SetPortAttribute(
   ScrnInfoPtr pScrn, 
   Atom attribute,
   INT32 value, 
-  pointer data
+  void* data
 ){
   I810PortPrivPtr pPriv = (I810PortPrivPtr)data;
   I810Ptr pI810 = I810PTR(pScrn);
@@ -588,7 +579,7 @@ I810GetPortAttribute(
   ScrnInfoPtr pScrn, 
   Atom attribute,
   INT32 *value, 
-  pointer data
+  void *data
 ){
   I810PortPrivPtr pPriv = (I810PortPrivPtr)data;
 
@@ -612,7 +603,7 @@ I810QueryBestSize(
   short vid_w, short vid_h, 
   short drw_w, short drw_h, 
   unsigned int *p_w, unsigned int *p_h, 
-  pointer data
+  void *data
 ){
    if(vid_w > (drw_w << 1)) drw_w = vid_w >> 1;
    if(vid_h > (drw_h << 1)) drw_h = vid_h >> 1;
@@ -939,7 +930,7 @@ I810AllocateMemory(
 	xf86FreeOffscreenLinear(linear);
    }
 
-   screen = xf86ScrnToScreen(pScrn);
+   screen = pScrn->pScreen;
 
    new_linear = xf86AllocateOffscreenLinear(screen, size, 4,
                                             NULL, NULL, NULL);
@@ -970,7 +961,7 @@ I810PutImage(
   int id, unsigned char* buf, 
   short width, short height, 
   Bool sync,
-  RegionPtr clipBoxes, pointer data,
+  RegionPtr clipBoxes, void *data,
   DrawablePtr pDraw
 ){
     I810Ptr pI810 = I810PTR(pScrn);
@@ -1142,45 +1133,6 @@ I810QueryImageAttributes(
     return size;
 }
 
-#if !HAVE_NOTIFY_FD
-static void
-I810BlockHandler (BLOCKHANDLER_ARGS_DECL)
-{
-    SCREEN_PTR(arg);
-    ScrnInfoPtr pScrn = xf86ScreenToScrn(screen);
-    I810Ptr      pI810 = I810PTR(pScrn);
-    I810PortPrivPtr pPriv = GET_PORT_PRIVATE(pScrn);
-    I810OverlayRegPtr overlay = (I810OverlayRegPtr) (pI810->FbBase + pI810->OverlayStart); 
-
-    screen->BlockHandler = pI810->BlockHandler;
-    
-    (*screen->BlockHandler) (BLOCKHANDLER_ARGS);
-
-    screen->BlockHandler = I810BlockHandler;
-
-    if(pPriv->videoStatus & TIMER_MASK) {
-	UpdateCurrentTime();
-	if(pPriv->videoStatus & OFF_TIMER) {
-	    if(pPriv->offTime < currentTime.milliseconds) {
-		/* Turn off the overlay */
-		overlay->OV0CMD &= 0xFFFFFFFE;
-		OVERLAY_UPDATE(pI810->OverlayPhysical);
-
-		pPriv->videoStatus = FREE_TIMER;
-		pPriv->freeTime = currentTime.milliseconds + FREE_DELAY;
-	    }
-	} else {  /* FREE_TIMER */
-	    if(pPriv->freeTime < currentTime.milliseconds) {
-		if(pPriv->linear) {
-		   xf86FreeOffscreenLinear(pPriv->linear);
-		   pPriv->linear = NULL;
-		}
-		pPriv->videoStatus = 0;
-	    }
-        }
-    }
-}
-#else
 static void
 I810BlockHandler(void *data, void *_timeout)
 {
@@ -1211,8 +1163,6 @@ I810BlockHandler(void *data, void *_timeout)
         }
     }
 }
-#endif
-
 
 /***************************************************************************
  * Offscreen Images
@@ -1273,7 +1223,7 @@ I810AllocateSurface(
     surface->id = id;   
     surface->pitches[0] = pitch;
     surface->offsets[0] = linear->offset * bpp;
-    surface->devPrivate.ptr = (pointer)pPriv;
+    surface->devPrivate.ptr = (void*)pPriv;
 
     memset(pI810->FbBase + surface->offsets[0],0,size);
 

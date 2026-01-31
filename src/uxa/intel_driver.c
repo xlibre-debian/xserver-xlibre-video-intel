@@ -72,9 +72,9 @@ USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "intel_options.h"
 #include "i915_drm.h"
 
-static void i830AdjustFrame(ADJUST_FRAME_ARGS_DECL);
-static Bool I830CloseScreen(CLOSE_SCREEN_ARGS_DECL);
-static Bool I830EnterVT(VT_FUNC_ARGS_DECL);
+static void i830AdjustFrame(ScrnInfoPtr scrn, int x, int y);
+static Bool I830CloseScreen(ScreenPtr screen);
+static Bool I830EnterVT(ScrnInfoPtr scrn);
 
 /* temporary */
 extern void xf86SetCursor(ScreenPtr screen, CursorPtr pCurs, int x, int y);
@@ -136,11 +136,7 @@ I830LoadPalette(ScrnInfoPtr scrn, int numColors, int *indices,
 		}
 
 		/* Make the change through RandR */
-#ifdef RANDR_12_INTERFACE
 		RRCrtcGammaSet(crtc->randr_crtc, lut_r, lut_g, lut_b);
-#else
-		crtc->funcs->gamma_set(crtc, lut_r, lut_g, lut_b, 256);
-#endif
 	}
 }
 
@@ -651,7 +647,7 @@ redisplay_dirty(ScreenPtr screen, PixmapDirtyUpdatePtr dirty)
 static void
 intel_dirty_update(intel_screen_private *intel)
 {
-	ScreenPtr screen = xf86ScrnToScreen(intel->scrn);
+	ScreenPtr screen = intel->scrn->pScreen;
 	RegionPtr region;
 	PixmapDirtyUpdatePtr ent;
 
@@ -668,28 +664,6 @@ intel_dirty_update(intel_screen_private *intel)
 }
 #endif
 
-#if !HAVE_NOTIFY_FD
-static void
-I830BlockHandler(BLOCKHANDLER_ARGS_DECL)
-{
-	SCREEN_PTR(arg);
-	ScrnInfoPtr scrn = xf86ScreenToScrn(screen);
-	intel_screen_private *intel = intel_get_screen_private(scrn);
-
-	screen->BlockHandler = intel->BlockHandler;
-
-	(*screen->BlockHandler) (BLOCKHANDLER_ARGS);
-
-	intel->BlockHandler = screen->BlockHandler;
-	screen->BlockHandler = I830BlockHandler;
-
-	intel_uxa_block_handler(intel);
-	intel_video_block_handler(intel);
-#ifdef INTEL_PIXMAP_SHARING
-	intel_dirty_update(intel);
-#endif
-}
-#else
 static void
 I830BlockHandler(void *data, void *timeout)
 {
@@ -701,7 +675,6 @@ I830BlockHandler(void *data, void *timeout)
 	intel_dirty_update(intel);
 #endif
 }
-#endif
 
 static Bool
 intel_init_initial_framebuffer(ScrnInfoPtr scrn)
@@ -732,7 +705,7 @@ intel_init_initial_framebuffer(ScrnInfoPtr scrn)
 
 static void
 intel_flush_callback(CallbackListPtr *list,
-		     pointer user_data, pointer call_data)
+		     void *user_data, void* call_data)
 {
 	ScrnInfoPtr scrn = user_data;
 	if (scrn->vtSema)
@@ -857,7 +830,7 @@ I830UeventFini(ScrnInfoPtr scrn)
 #endif /* HAVE_UDEV */
 
 static Bool
-I830ScreenInit(SCREEN_INIT_ARGS_DECL)
+I830ScreenInit(ScreenPtr screen, int argc, char **argv)
 {
 	ScrnInfoPtr scrn = xf86ScreenToScrn(screen);
 	intel_screen_private *intel = intel_get_screen_private(scrn);
@@ -955,14 +928,9 @@ I830ScreenInit(SCREEN_INIT_ARGS_DECL)
 			   "Hardware cursor initialization failed\n");
 	}
 
-#if !HAVE_NOTIFY_FD
-	intel->BlockHandler = screen->BlockHandler;
-	screen->BlockHandler = I830BlockHandler;
-#else
 	RegisterBlockAndWakeupHandlers(I830BlockHandler,
 				       (ServerWakeupHandlerProcPtr)NoopDDA,
 				       intel);
-#endif
 
 #ifdef INTEL_PIXMAP_SHARING
 	screen->StartPixmapTracking = PixmapStartDirtyTracking;
@@ -1064,16 +1032,15 @@ I830ScreenInit(SCREEN_INIT_ARGS_DECL)
 	 * later memory should be bound when allocating, e.g rotate_mem */
 	scrn->vtSema = TRUE;
 
-	return I830EnterVT(VT_FUNC_ARGS(0));
+	return I830EnterVT(NULL);
 }
 
-static void i830AdjustFrame(ADJUST_FRAME_ARGS_DECL)
+static void i830AdjustFrame(ScrnInfoPtr scrn, int x, int y)
 {
 }
 
-static void I830FreeScreen(FREE_SCREEN_ARGS_DECL)
+static void I830FreeScreen(ScrnInfoPtr scrn)
 {
-	SCRN_INFO_PTR(arg);
 	intel_screen_private *intel = intel_get_screen_private(scrn);
 
 	if (intel && !((uintptr_t)intel & 3)) {
@@ -1086,9 +1053,8 @@ static void I830FreeScreen(FREE_SCREEN_ARGS_DECL)
 	}
 }
 
-static void I830LeaveVT(VT_FUNC_ARGS_DECL)
+static void I830LeaveVT(ScrnInfoPtr scrn)
 {
-	SCRN_INFO_PTR(arg);
 	intel_screen_private *intel = intel_get_screen_private(scrn);
 
 	xf86RotateFreeShadow(scrn);
@@ -1103,9 +1069,8 @@ static void I830LeaveVT(VT_FUNC_ARGS_DECL)
 /*
  * This gets called when gaining control of the VT, and from ScreenInit().
  */
-static Bool I830EnterVT(VT_FUNC_ARGS_DECL)
+static Bool I830EnterVT(ScrnInfoPtr scrn)
 {
-	SCRN_INFO_PTR(arg);
 	intel_screen_private *intel = intel_get_screen_private(scrn);
 
 	if (intel_get_master(intel->dev)) {
@@ -1122,14 +1087,12 @@ static Bool I830EnterVT(VT_FUNC_ARGS_DECL)
 	return TRUE;
 }
 
-static Bool I830SwitchMode(SWITCH_MODE_ARGS_DECL)
+static Bool I830SwitchMode(ScrnInfoPtr scrn, DisplayModePtr mode)
 {
-	SCRN_INFO_PTR(arg);
-
 	return xf86SetSingleMode(scrn, mode, RR_Rotate_0);
 }
 
-static Bool I830CloseScreen(CLOSE_SCREEN_ARGS_DECL)
+static Bool I830CloseScreen(ScreenPtr screen)
 {
 	ScrnInfoPtr scrn = xf86ScreenToScrn(screen);
 	intel_screen_private *intel = intel_get_screen_private(scrn);
@@ -1163,7 +1126,7 @@ static Bool I830CloseScreen(CLOSE_SCREEN_ARGS_DECL)
 	}
 
 	if (scrn->vtSema == TRUE) {
-		I830LeaveVT(VT_FUNC_ARGS(0));
+		I830LeaveVT(NULL);
 	}
 
 	intel_batch_teardown(scrn);
@@ -1176,7 +1139,7 @@ static Bool I830CloseScreen(CLOSE_SCREEN_ARGS_DECL)
 	i965_free_video(scrn);
 
 	screen->CloseScreen = intel->CloseScreen;
-	(*screen->CloseScreen) (CLOSE_SCREEN_ARGS);
+	(*screen->CloseScreen) (screen);
 
 	if (intel->dri2 == DRI_ACTIVE) {
 		I830DRI2CloseScreen(screen);
@@ -1195,9 +1158,8 @@ static Bool I830CloseScreen(CLOSE_SCREEN_ARGS_DECL)
 }
 
 static ModeStatus
-I830ValidMode(SCRN_ARG_TYPE arg, DisplayModePtr mode, Bool verbose, int flags)
+I830ValidMode(ScrnInfoPtr scrn, DisplayModePtr mode, Bool verbose, int flags)
 {
-	SCRN_INFO_PTR(arg);
 	if (mode->Flags & V_INTERLACE) {
 		if (verbose) {
 			xf86DrvMsg(scrn->scrnIndex, X_PROBED,
@@ -1221,9 +1183,8 @@ I830ValidMode(SCRN_ARG_TYPE arg, DisplayModePtr mode, Bool verbose, int flags)
  * DoApmEvent() in common/xf86PM.c, including if we want to see events other
  * than suspend/resume.
  */
-static Bool I830PMEvent(SCRN_ARG_TYPE arg, pmEvent event, Bool undo)
+static Bool I830PMEvent(ScrnInfoPtr scrn, pmEvent event, Bool undo)
 {
-	SCRN_INFO_PTR(arg);
 	intel_screen_private *intel = intel_get_screen_private(scrn);
 
 	switch (event) {
@@ -1233,12 +1194,12 @@ static Bool I830PMEvent(SCRN_ARG_TYPE arg, pmEvent event, Bool undo)
 	case XF86_APM_SYS_STANDBY:
 	case XF86_APM_USER_STANDBY:
 		if (!undo && !intel->suspended) {
-			scrn->LeaveVT(VT_FUNC_ARGS(0));
+			scrn->LeaveVT(NULL);
 			intel->suspended = TRUE;
 			sleep(SUSPEND_SLEEP);
 		} else if (undo && intel->suspended) {
 			sleep(RESUME_SLEEP);
-			scrn->EnterVT(VT_FUNC_ARGS(0));
+			scrn->EnterVT(NULL);
 			intel->suspended = FALSE;
 		}
 		break;
@@ -1247,7 +1208,7 @@ static Bool I830PMEvent(SCRN_ARG_TYPE arg, pmEvent event, Bool undo)
 	case XF86_APM_CRITICAL_RESUME:
 		if (intel->suspended) {
 			sleep(RESUME_SLEEP);
-			scrn->EnterVT(VT_FUNC_ARGS(0));
+			scrn->EnterVT(NULL);
 			intel->suspended = FALSE;
 			/*
 			 * Turn the screen saver off when resuming.  This seems to be

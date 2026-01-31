@@ -44,9 +44,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include <xf86str.h>
 
 #include <xf86Crtc.h>
-#if XF86_CRTC_VERSION >= 5
 #define HAS_PIXMAP_SHARING 1
-#endif
 
 #include <windowstr.h>
 #include <glyphstr.h>
@@ -227,11 +225,6 @@ struct sna_gc {
 	void *priv;
 };
 
-static inline struct sna_gc *sna_gc(GCPtr gc)
-{
-	return (struct sna_gc *)__get_private(gc, sna_gc_key);
-}
-
 enum {
 	FLUSH_TIMER = 0,
 	THROTTLE_TIMER,
@@ -329,7 +322,7 @@ struct sna {
 
 #if HAVE_UDEV
 		struct udev_monitor *backlight_monitor;
-		pointer backlight_handler;
+		void *backlight_handler;
 #endif
 
 		Bool (*rrGetInfo)(ScreenPtr, Rotation *);
@@ -383,11 +376,9 @@ struct sna {
 	struct sna_present {
 		bool available;
 		bool open;
-#if HAVE_PRESENT
 		struct list vblank_queue;
 		uint64_t unflip;
 		void *freed_info;
-#endif
 	} present;
 
 	struct sna_xv {
@@ -398,10 +389,6 @@ struct sna {
 	EntityInfoPtr pEnt;
 	const struct intel_device_info *info;
 
-#if !HAVE_NOTIFY_FD
-	ScreenBlockHandlerProcPtr BlockHandler;
-	ScreenWakeupHandlerProcPtr WakeupHandler;
-#endif
 	CloseScreenProcPtr CloseScreen;
 
 	PicturePtr clear;
@@ -430,7 +417,7 @@ struct sna {
 
 #if HAVE_UDEV
 	struct udev_monitor *uevent_monitor;
-	pointer uevent_handler;
+	void *uevent_handler;
 #endif
 
 	struct {
@@ -507,7 +494,7 @@ to_sna_from_screen(ScreenPtr screen)
 
 pure static inline ScreenPtr to_screen_from_sna(struct sna *sna)
 {
-	ScreenPtr screen = xf86ScrnToScreen(sna->scrn);
+	ScreenPtr screen = sna->scrn->pScreen;
 	assert(!screen || sna == to_sna_from_screen(screen));
 	return screen;
 }
@@ -617,19 +604,11 @@ static inline bool sna_dri3_open(struct sna *sna, ScreenPtr pScreen) { return fa
 static inline void sna_dri3_close(struct sna *sna, ScreenPtr pScreen) { }
 #endif
 
-#if HAVE_PRESENT
 bool sna_present_open(struct sna *sna, ScreenPtr pScreen);
 void sna_present_update(struct sna *sna);
 void sna_present_close(struct sna *sna, ScreenPtr pScreen);
 void sna_present_vblank_handler(struct drm_event_vblank *event);
 void sna_present_cancel_flip(struct sna *sna);
-#else
-static inline bool sna_present_open(struct sna *sna, ScreenPtr pScreen) { return false; }
-static inline void sna_present_update(struct sna *sna) { }
-static inline void sna_present_close(struct sna *sna, ScreenPtr pScreen) { }
-static inline void sna_present_vblank_handler(struct drm_event_vblank *event) { }
-static inline void sna_present_cancel_flip(struct sna *sna) { }
-#endif
 
 extern unsigned sna_crtc_count_sprites(xf86CrtcPtr crtc);
 extern bool sna_crtc_set_sprite_rotation(xf86CrtcPtr crtc, unsigned idx, uint32_t rotation);
@@ -1365,12 +1344,12 @@ void sna_image_composite(pixman_op_t        op,
 			 uint16_t           width,
 			 uint16_t           height);
 
-extern jmp_buf sigjmp[4];
+extern sigjmp_buf sigjmp_buffer[4];
 extern volatile sig_atomic_t sigtrap;
 
 #define sigtrap_assert_inactive() assert(sigtrap == 0)
-#define sigtrap_assert_active() assert(sigtrap > 0 && sigtrap <= ARRAY_SIZE(sigjmp))
-#define sigtrap_get() sigsetjmp(sigjmp[sigtrap++], 1)
+#define sigtrap_assert_active() assert(sigtrap > 0 && sigtrap <= ARRAY_SIZE(sigjmp_buffer))
+#define sigtrap_get() sigsetjmp(sigjmp_buffer[sigtrap++], 1)
 
 static inline void sigtrap_put(void)
 {

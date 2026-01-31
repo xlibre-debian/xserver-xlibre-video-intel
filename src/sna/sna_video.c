@@ -927,28 +927,6 @@ sna_xv_fixup_formats(ScreenPtr screen, XvFormatPtr formats, int num_formats)
 	return count;
 }
 
-#if XORG_XV_VERSION < 2
-static int
-sna_xv_query_adaptors(ScreenPtr screen,
-		      XvAdaptorPtr *adaptors,
-		      int *num_adaptors)
-{
-	struct sna *sna = to_sna_from_screen(screen);
-
-	*num_adaptors = sna->xv.num_adaptors;
-	*adaptors = sna->xv.adaptors;
-	return Success;
-}
-
-static Bool
-sna_xv_close_screen(CLOSE_SCREEN_ARGS_DECL)
-{
-	struct sna *sna = to_sna_from_screen(screen);
-	sna_video_close(sna);
-	return TRUE;
-}
-#endif
-
 void sna_video_init(struct sna *sna, ScreenPtr screen)
 {
 	XvScreenPtr xv;
@@ -969,10 +947,6 @@ void sna_video_init(struct sna *sna, ScreenPtr screen)
 		return;
 
 	xv = to_xv(screen);
-#if XORG_XV_VERSION < 2
-	xv->ddCloseScreen = sna_xv_close_screen;
-	xv->ddQueryAdaptors = sna_xv_query_adaptors;
-#endif
 
 	sna_video_textured_setup(sna, screen);
 	sna_video_sprite_setup(sna, screen);
@@ -999,11 +973,7 @@ void sna_video_destroy_window(WindowPtr win)
 
 	port = sna_window_get_port(win);
 	if (port) {
-#if XORG_XV_VERSION < 2
-		port->pAdaptor->ddStopVideo(NULL, port, &win->drawable);
-#else
 		port->pAdaptor->ddStopVideo(port, &win->drawable);
-#endif
 	}
 	assert(sna_window_get_port(win) == NULL);
 }

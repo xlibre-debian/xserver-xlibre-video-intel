@@ -120,7 +120,7 @@ static void sna_video_sprite_hide(xf86CrtcPtr crtc, struct sna_video *video)
 	video->color_key_changed |= 1 << index;
 }
 
-static int sna_video_sprite_stop(ddStopVideo_ARGS)
+static int sna_video_sprite_stop(XvPortPtr port, DrawablePtr draw)
 {
 	struct sna_video *video = port->devPriv.ptr;
 	xf86CrtcConfigPtr config = XF86_CRTC_CONFIG_PTR(video->sna->scrn);
@@ -144,7 +144,7 @@ static int sna_video_sprite_stop(ddStopVideo_ARGS)
 	return Success;
 }
 
-static int sna_video_sprite_set_attr(ddSetPortAttribute_ARGS)
+static int sna_video_sprite_set_attr(XvPortPtr port, Atom attribute, INT32 value)
 {
 	struct sna_video *video = port->devPriv.ptr;
 
@@ -172,7 +172,7 @@ static int sna_video_sprite_set_attr(ddSetPortAttribute_ARGS)
 	return Success;
 }
 
-static int sna_video_sprite_get_attr(ddGetPortAttribute_ARGS)
+static int sna_video_sprite_get_attr(XvPortPtr port, Atom attribute, INT32 *value)
 {
 	struct sna_video *video = port->devPriv.ptr;
 
@@ -710,11 +710,7 @@ off:
 	return Success;
 
 err:
-#if XORG_XV_VERSION < 2
-	(void)sna_video_sprite_stop(client, port, draw);
-#else
 	(void)sna_video_sprite_stop(port, draw);
-#endif
 	return ret;
 }
 
@@ -876,10 +872,6 @@ void sna_video_sprite_setup(struct sna *sna, ScreenPtr screen)
 		adaptor->nImages = ARRAY_SIZE(images);
 	}
 
-#if XORG_XV_VERSION < 2
-	adaptor->ddAllocatePort = sna_xv_alloc_port;
-	adaptor->ddFreePort = sna_xv_free_port;
-#endif
 	adaptor->ddPutVideo = NULL;
 	adaptor->ddPutStill = NULL;
 	adaptor->ddGetVideo = NULL;

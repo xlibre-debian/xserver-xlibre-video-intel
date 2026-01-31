@@ -83,9 +83,7 @@ SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #define MONITOR_EDID_COMPLETE_RAWDATA EDID_COMPLETE_RAWDATA
 #endif
 
-#if XF86_CRTC_VERSION >= 5
 #define INTEL_PIXMAP_SHARING 1
-#endif
 
 #define MAX_PIPES 4 /* consider making all users dynamic */
 
@@ -193,9 +191,6 @@ typedef struct intel_screen_private {
 
 	int colorKey;
 	XF86VideoAdaptorPtr adaptor;
-#if !HAVE_NOTIFY_FD
-	ScreenBlockHandlerProcPtr BlockHandler;
-#endif
 	Bool overlayOn;
 
 	struct {
@@ -299,7 +294,7 @@ typedef struct intel_screen_private {
 	unsigned debug_flush;
 #if HAVE_UDEV
 	struct udev_monitor *uevent_monitor;
-	pointer uevent_handler;
+	void *uevent_handler;
 #endif
 	Bool has_prime_vmap_flush;
 
@@ -523,11 +518,7 @@ static inline void intel_sync_close(ScreenPtr screen) { }
 #define DebugPresent(x)
 #endif
 
-#if HAVE_PRESENT
 Bool intel_present_screen_init(ScreenPtr screen);
-#else
-static inline Bool intel_present_screen_init(ScreenPtr screen) { return 0; }
-#endif
 
 dri_bo *
 intel_get_pixmap_bo(PixmapPtr pixmap);
