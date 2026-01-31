@@ -1,11 +1,11 @@
 project('xf86-video-intel', 'c',
-	version : '25.0.0',
+	version : '25.0.1',
 	default_options: [
 	  'warning_level=2',
 	  'c_std=gnu99',
 	],
 	license : 'MIT',
-	meson_version : '>=0.50.0')
+	meson_version : '>=0.51.0')
 
 config = configuration_data()
 
@@ -127,10 +127,10 @@ endif
 
 pixman = dependency('pixman-1', version : '>= 0.16.0', required : true)
 
-if pixman.version() >= '0.24.0'
+if pixman.version().version_compare('>=0.24.0')
   config.set('HAS_PIXMAN_TRIANGLES', 1)
 endif
-if pixman.version() >= '0.27.1'
+if pixman.version().version_compare('>=0.27.1')
   config.set('HAS_PIXMAN_GLYPHS', 1)
 endif
 

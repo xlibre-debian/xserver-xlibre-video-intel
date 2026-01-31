@@ -168,6 +168,11 @@ static void sna_shm_watch_flush(struct sna *sna, int enable);
 static void
 sna_poly_fill_rect__gpu(DrawablePtr draw, GCPtr gc, int n, xRectangle *rect);
 
+static inline struct sna_gc *sna_gc(GCPtr gc)
+{
+	return (struct sna_gc *)__get_private(gc, sna_gc_key);
+}
+
 static inline void region_set(RegionRec *r, const BoxRec *b)
 {
 	r->extents = *b;
@@ -381,7 +386,7 @@ static void assert_pixmap_damage(PixmapPtr p)
 #endif
 #endif
 
-jmp_buf sigjmp[4];
+sigjmp_buf sigjmp_buffer[4];
 volatile sig_atomic_t sigtrap;
 
 static int sigtrap_handler(int sig)
@@ -391,7 +396,7 @@ static int sigtrap_handler(int sig)
 	sna_threads_trap(sig);
 
 	if (sigtrap)
-		siglongjmp(sigjmp[--sigtrap], sig);
+		siglongjmp(sigjmp_buffer[--sigtrap], sig);
 
 	return -1;
 }
@@ -7148,8 +7153,7 @@ sna_do_copy(DrawablePtr src, DrawablePtr dst, GCPtr gc,
 		clip = miHandleExposures(src, dst, gc,
 					 sx - src->x, sy - src->y,
 					 width, height,
-					 dx - dst->x, dy - dst->y,
-					 (unsigned long) bitPlane);
+					 dx - dst->x, dy - dst->y);
 	return clip;
 }
 
@@ -8873,7 +8877,7 @@ empty:
 	return miHandleExposures(src, dst, gc,
 				 src_x, src_y,
 				 w, h,
-				 dst_x, dst_y, bit);
+				 dst_x, dst_y);
 }
 
 static bool
@@ -9099,7 +9103,6 @@ sna_poly_zero_line_blt(DrawablePtr drawable,
 	struct sna *sna = to_sna_from_pixmap(pixmap);
 	int x2, y2, xstart, ystart, oc2;
 	unsigned int bias = miGetZeroLineBias(drawable->pScreen);
-	bool degenerate = true;
 	struct sna_fill_op fill;
 	RegionRec clip;
 	BoxRec box[512], *b, * const last_box = box + ARRAY_SIZE(box);
@@ -9168,8 +9171,6 @@ sna_poly_zero_line_blt(DrawablePtr drawable,
 			if (x2 == x1 && y2 == y1)
 				continue;
 
-			degenerate = false;
-
 			oc2 = 0;
 			OUTCODES(oc2, x2, y2, extents);
 			if (oc1 & oc2)
@@ -9199,10 +9200,7 @@ sna_poly_zero_line_blt(DrawablePtr drawable,
 				b->x2++;
 				b->y2++;
 				if (oc1 | oc2) {
-					bool intersects;
-
-					intersects = box_intersect(b, extents);
-					assert(intersects);
+					assert(box_intersect(b, extents));
 				}
 				if (++b == last_box) {
 					ret = &&rectangle_continue;
@@ -10058,6 +10056,7 @@ spans_fallback:
 			assert_pixmap_damage(data.pixmap);
 		}
 		RegionUninit(&data.region);
+		sna_gc(gc)->priv = NULL;
 		return;
 	}
 
@@ -16071,7 +16070,7 @@ out:
 static bool
 sna_reversed_glyph_blt(DrawablePtr drawable, GCPtr gc,
 		       int _x, int _y, unsigned int _n,
-		       CharInfoPtr *_info, pointer _base,
+		       CharInfoPtr *_info, void *_base,
 		       struct kgem_bo *bo,
 		       struct sna_damage **damage,
 		       RegionPtr clip,
@@ -16368,7 +16367,7 @@ skip:
 static void
 sna_image_glyph(DrawablePtr drawable, GCPtr gc,
 		int x, int y, unsigned int n,
-		CharInfoPtr *info, pointer base)
+		CharInfoPtr *info, void *base)
 {
 	PixmapPtr pixmap = get_drawable_pixmap(drawable);
 	struct sna *sna = to_sna_from_pixmap(pixmap);
@@ -16457,7 +16456,7 @@ out:
 static void
 sna_poly_glyph(DrawablePtr drawable, GCPtr gc,
 	       int x, int y, unsigned int n,
-	       CharInfoPtr *info, pointer base)
+	       CharInfoPtr *info, void *base)
 {
 	PixmapPtr pixmap = get_drawable_pixmap(drawable);
 	struct sna *sna = to_sna_from_pixmap(pixmap);
@@ -17345,7 +17344,7 @@ void sna_accel_flush(struct sna *sna)
 
 static void
 sna_shm_flush_callback(CallbackListPtr *list,
-		       pointer user_data, pointer call_data)
+		       void *user_data, void *call_data)
 {
 	struct sna *sna = user_data;
 
@@ -17357,14 +17356,14 @@ sna_shm_flush_callback(CallbackListPtr *list,
 }
 
 static void
-sna_flush_callback(CallbackListPtr *list, pointer user_data, pointer call_data)
+sna_flush_callback(CallbackListPtr *list, void *user_data, void *call_data)
 {
 	struct sna *sna = user_data;
 	sna_accel_flush(sna);
 }
 
 static void
-sna_event_callback(CallbackListPtr *list, pointer user_data, pointer call_data)
+sna_event_callback(CallbackListPtr *list, void *user_data, void *call_data)
 {
 	EventInfoRec *eventinfo = call_data;
 	struct sna *sna = user_data;
@@ -17809,7 +17808,7 @@ struct sna_visit_set_pixmap_window {
 };
 
 static int
-sna_visit_set_window_pixmap(WindowPtr window, pointer data)
+sna_visit_set_window_pixmap(WindowPtr window, void *data)
 {
     struct sna_visit_set_pixmap_window *visit = data;
 
@@ -17839,7 +17838,7 @@ migrate_dirty_tracking(PixmapPtr old_front, PixmapPtr new_front)
 			continue;
 #endif
 
-		DamageUnregister(&dirty->src->drawable, dirty->damage);
+		DamageUnregister(dirty->damage);
 		DamageDestroy(dirty->damage);
 
 		dirty->damage = DamageCreate(NULL, NULL,
@@ -18031,12 +18030,10 @@ static bool sna_option_accel_blt(struct sna *sna)
 	return strcasecmp(s, "blt") == 0;
 }
 
-#if HAVE_NOTIFY_FD
 static void sna_accel_notify(int fd, int ready, void *data)
 {
 	sna_mode_wakeup(data);
 }
-#endif
 
 bool sna_accel_init(ScreenPtr screen, struct sna *sna)
 {
@@ -18293,7 +18290,7 @@ void sna_accel_block(struct sna *sna, struct timeval **tv)
 	}
 
 	if (sna->mode.dirty)
-		sna_crtc_config_notify(xf86ScrnToScreen(sna->scrn));
+		sna_crtc_config_notify(sna->scrn->pScreen);
 
 restart:
 	if (sna_scanout_do_flush(sna))

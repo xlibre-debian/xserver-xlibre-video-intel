@@ -96,22 +96,22 @@ XF86VideoFormatRec intel_xv_formats[NUM_FORMATS] = {
 	{15, TrueColor}, {16, TrueColor}, {24, TrueColor}
 };
 
-XF86AttributeRec intel_xv_attributes[NUM_ATTRIBUTES] = {
-	{XvSettable | XvGettable, 0, (1 << 24) - 1, "XV_COLORKEY"},
-	{XvSettable | XvGettable, -128, 127, "XV_BRIGHTNESS"},
-	{XvSettable | XvGettable, 0, 255, "XV_CONTRAST"},
-	{XvSettable | XvGettable, 0, 1023, "XV_SATURATION"},
-	{XvSettable | XvGettable, -1, 1, "XV_PIPE"}
+XvAttributeRec intel_xv_attributes[NUM_ATTRIBUTES] = {
+	{XvSettable | XvGettable,    0, (1 << 24) - 1, (char*)"XV_COLORKEY"},
+	{XvSettable | XvGettable, -128,           127, (char*)"XV_BRIGHTNESS"},
+	{XvSettable | XvGettable,    0,           255, (char*)"XV_CONTRAST"},
+	{XvSettable | XvGettable,    0,          1023, (char*)"XV_SATURATION"},
+	{XvSettable | XvGettable,   -1,             1, (char*)"XV_PIPE"}
 };
 
 #define GAMMA_ATTRIBUTES 6
-XF86AttributeRec intel_xv_gamma_attributes[GAMMA_ATTRIBUTES] = {
-	{XvSettable | XvGettable, 0, 0xffffff, "XV_GAMMA0"},
-	{XvSettable | XvGettable, 0, 0xffffff, "XV_GAMMA1"},
-	{XvSettable | XvGettable, 0, 0xffffff, "XV_GAMMA2"},
-	{XvSettable | XvGettable, 0, 0xffffff, "XV_GAMMA3"},
-	{XvSettable | XvGettable, 0, 0xffffff, "XV_GAMMA4"},
-	{XvSettable | XvGettable, 0, 0xffffff, "XV_GAMMA5"}
+XvAttributeRec intel_xv_gamma_attributes[GAMMA_ATTRIBUTES] = {
+	{XvSettable | XvGettable, 0, 0xffffff, (char*)"XV_GAMMA0"},
+	{XvSettable | XvGettable, 0, 0xffffff, (char*)"XV_GAMMA1"},
+	{XvSettable | XvGettable, 0, 0xffffff, (char*)"XV_GAMMA2"},
+	{XvSettable | XvGettable, 0, 0xffffff, (char*)"XV_GAMMA3"},
+	{XvSettable | XvGettable, 0, 0xffffff, (char*)"XV_GAMMA4"},
+	{XvSettable | XvGettable, 0, 0xffffff, (char*)"XV_GAMMA5"}
 };
 
 #ifdef INTEL_XVMC
@@ -254,7 +254,7 @@ void intel_free_video_buffers(intel_adaptor_private *adaptor_priv)
 
 int
 intel_video_get_port_attribute(ScrnInfoPtr scrn,
-                               Atom attribute, INT32 * value, pointer data)
+                               Atom attribute, INT32 * value, void *data)
 {
 	intel_screen_private *intel = intel_get_screen_private(scrn);
 	intel_adaptor_private *adaptor_priv = (intel_adaptor_private *) data;
@@ -301,7 +301,7 @@ intel_video_query_best_size(ScrnInfoPtr scrn,
 		  Bool motion,
 		  short vid_w, short vid_h,
 		  short drw_w, short drw_h,
-		  unsigned int *p_w, unsigned int *p_h, pointer data)
+		  unsigned int *p_w, unsigned int *p_h, void *data)
 {
 	if (vid_w > (drw_w << 1))
 		drw_w = vid_w >> 1;
@@ -807,7 +807,7 @@ intel_video_query_image_attributes(ScrnInfoPtr scrn,
 	return size;
 }
 
-void intel_video_stop_video(ScrnInfoPtr scrn, pointer data, Bool shutdown)
+void intel_video_stop_video(ScrnInfoPtr scrn, void *data, Bool shutdown)
 {
 	intel_adaptor_private *adaptor_priv = (intel_adaptor_private *) data;
 

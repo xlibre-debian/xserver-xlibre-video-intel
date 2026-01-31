@@ -123,7 +123,7 @@ void intel_video_overlay_off(intel_screen_private *intel)
 }
 static int
 intel_video_overlay_set_port_attribute(ScrnInfoPtr scrn,
-                                       Atom attribute, INT32 value, pointer data)
+                                       Atom attribute, INT32 value, void *data)
 {
 	intel_adaptor_private *adaptor_priv = (intel_adaptor_private *) data;
 	intel_screen_private *intel = intel_get_screen_private(scrn);
@@ -366,7 +366,7 @@ intel_video_overlay_put_image(ScrnInfoPtr scrn,
                               short drw_w, short drw_h,
                               int id, unsigned char *buf,
                               short width, short height,
-                              Bool sync, RegionPtr clipBoxes, pointer data,
+                              Bool sync, RegionPtr clipBoxes, void *data,
                               DrawablePtr drawable)
 {
 	intel_adaptor_private *adaptor_priv = (intel_adaptor_private *) data;
@@ -433,7 +433,7 @@ XF86VideoAdaptorPtr intel_video_overlay_setup_image(ScreenPtr screen)
 	intel_screen_private *intel = intel_get_screen_private(scrn);
 	XF86VideoAdaptorPtr adapt;
 	intel_adaptor_private *adaptor_priv;
-	XF86AttributePtr att;
+	XvAttributePtr att;
 
 	/* Set up overlay video if it is available */
 	intel->use_overlay = intel_has_overlay(intel);
@@ -465,20 +465,20 @@ XF86VideoAdaptorPtr intel_video_overlay_setup_image(ScreenPtr screen)
 
 	adaptor_priv = (intel_adaptor_private *)&adapt->pPortPrivates[1];
 
-	adapt->pPortPrivates[0].ptr = (pointer) (adaptor_priv);
+	adapt->pPortPrivates[0].ptr = (void*) (adaptor_priv);
 	adapt->nAttributes = NUM_ATTRIBUTES;
 	if (INTEL_INFO(intel)->gen >= 030)
 		adapt->nAttributes += GAMMA_ATTRIBUTES;	/* has gamma */
 	adapt->pAttributes =
-	    XNFalloc(sizeof(XF86AttributeRec) * adapt->nAttributes);
+	    XNFalloc(sizeof(XvAttributeRec) * adapt->nAttributes);
 	/* Now copy the attributes */
 	att = adapt->pAttributes;
 	memcpy((char *)att, (char *)intel_xv_attributes,
-	       sizeof(XF86AttributeRec) * NUM_ATTRIBUTES);
+	       sizeof(XvAttributeRec) * NUM_ATTRIBUTES);
 	att += NUM_ATTRIBUTES;
 	if (INTEL_INFO(intel)->gen >= 030) {
 		memcpy((char *)att, (char *)intel_xv_gamma_attributes,
-		       sizeof(XF86AttributeRec) * GAMMA_ATTRIBUTES);
+		       sizeof(XvAttributeRec) * GAMMA_ATTRIBUTES);
 	}
 	adapt->nImages = NUM_IMAGES - XVMC_IMAGE;
 

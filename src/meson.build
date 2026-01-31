@@ -23,7 +23,7 @@ if with_dri2
 
   dri = dependency('dri', required : false)
   if dri.found()
-    dridriverdir = dri.get_pkgconfig_variable('dridriverdir')
+    dridriverdir = dri.get_variable(pkgconfig:'dridriverdir')
   else
     dridriverdir = join_paths(get_option('libdir'), 'dri')
   endif
@@ -53,12 +53,7 @@ endif
 default_dri = get_option('default-dri')
 config.set('DEFAULT_DRI_LEVEL', default_dri)
 
-present = dependency('presentproto', required : false)
-has_present = (present.found() and
-	       cc.has_header('present.h', dependencies : xorg))
-if has_present
-  config.set('HAVE_PRESENT', 1)
-endif
+present = dependency('presentproto', required : true)
 
 if get_option('backlight')
   config.set('USE_BACKLIGHT', 1)

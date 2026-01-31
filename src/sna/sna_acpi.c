@@ -133,12 +133,10 @@ void _sna_acpi_wakeup(struct sna *sna)
 	} while (n);
 }
 
-#if HAVE_NOTIFY_FD
 static void sna_acpi_notify(int fd, int read, void *data)
 {
 	_sna_acpi_wakeup(data);
 }
-#endif
 
 static int read_power_state(const char *path)
 {
