@@ -44,9 +44,7 @@ if with_dri3
   ]
 endif
 
-if has_present
-  uxa_sources += 'intel_present.c'
-endif
+uxa_sources += 'intel_present.c'
 
 if with_xvmc
   uxa_sources += 'intel_hwmc.c'
